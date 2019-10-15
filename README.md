@@ -5,16 +5,27 @@ Here are the Python scripts used in the current project.
 ### OpenCV
 
 The OpenCV script extracts static image frames from videos and further generates optical flow images.
+
 The script requires a environment with python 3.5, numpy, and OpenCV-Python.
+
 To run the script, run "python3 opencv_opticalflow.py".
 
 ### MATLAB scripts
 
 The script "folder2list_leftright.m" generates a .txt file with a list of videos.
-The script "make_test_mat2_leftright.m" takes the .txt file as input to generate a .mat file with directories of the saved static images and optical flow images.
+
+The script "make_test_mat2_leftright.m" takes the .txt file as input to generate a .mat file with directories of the saved static images 
+and optical flow images.
 
 ### CNN
 
 The CNN scripts implement the spatial CNN of appearance, the temporal CNN of motion, and the two-stream CNN.
+
 First, run "python prepare_flow1.py" to process the list of files in .mat into python format. The name2id and data_path need to be changed accordingly.
+
 The running of CNN scripts requires an environment with python 2.7 and keras.
+
+Run "python CNN_image.py --mode 0" for training the spatial CNN.
+Run "python CNN_flow.py --mode 0" for training the temporal CNN.
+Run "python CNN_fusion.py --mode 0" for training the two-stream CNN.
+Change mode 0 to mode 1 for testing.
