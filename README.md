@@ -8,6 +8,11 @@ Yujia Peng, Hannah Lee, Tianmin Shu, and Hongjing Lu
 
 ## Getting started
 
+Clone this repository 
+```
+git clone https://github.com/yjpeng11/BM_CNN.git
+```
+
 ### Prerequisites
 * Linux Ubuntu 16.04
 * Python 2 and 3
