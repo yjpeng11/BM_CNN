@@ -1,6 +1,6 @@
 # Comparison between Two-stream Convolutional Neural Networks and Human Biological Motion Perception
 
-Here are the Python scripts used in the current project.
+Tensorflow implementation of "Comparison between Two-stream Convolutional Neural Networks and Human Biological Motion Perception"
 
 ## Publication
 #### Comparison between Two-stream Convolutional Neural Networks and Human Biological Motion Perception
