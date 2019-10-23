@@ -17,7 +17,12 @@ Yujia Peng, Hannah Lee, Tianmin Shu, and Hongjing Lu
 
 The OpenCV script extracts static image frames from videos and further generates optical flow images.
 
-The script requires a environment with python 3.5, numpy, and OpenCV-Python.
+Create an environment with all packages from requirements_opencv.txt installed.
+```
+python -m virtualenv opencv
+source cnn/bin/activate
+pip install -r requirements_opencv.txt
+```
 
 To run the script, run "python3 opencv_opticalflow.py".
 
@@ -33,8 +38,13 @@ and optical flow images.
 The CNN scripts implement the spatial CNN of appearance, the temporal CNN of motion, and the two-stream CNN.
 
 First, run "python prepare_flow1.py" to process the list of files in .mat into python format. The name2id and data_path need to be changed accordingly.
+```
+python -m virtualenv cnn
+source cnn/bin/activate
+pip install -r requirements_cnn.txt
+```
 
-The running of CNN scripts requires an environment with python 2.7, tensorflow-gpu 1.9.0, tensorflow-tensorboard 1.5.1, QyPy 1.7.0, and keras 2.2.4, h5py 2.8.0, scipy, skiimage, nnumpy.
+The running of CNN scripts requires an environment with python 2.7. Create an environment with all packages from requirements_cnn.txt installed (Note: please double check the CUDA version on your machine).
 
 Run "python CNN_image.py --mode 0" for training the spatial CNN.
 Run "python CNN_flow.py --mode 0" for training the temporal CNN.
