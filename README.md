@@ -29,7 +29,10 @@ source cnn/bin/activate
 pip install -r requirements_opencv.txt
 ```
 
-To run the script, run "python3 opencv_opticalflow.py".
+To extract static image frames and optical flow data, run:
+```
+python3 opencv_opticalflow.py
+```
 
 ### Step 2: Preprocessing model inputs
 
