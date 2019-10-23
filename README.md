@@ -6,7 +6,7 @@ Here are the Python scripts used in the current project.
 
 ## Getting started
 
-## Prerequisites
+### Prerequisites
 * Linux Ubuntu 16.04
 * Python 3
 * NVIDIA GPU + CUDA 9.0
