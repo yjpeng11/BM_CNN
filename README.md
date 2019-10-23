@@ -10,7 +10,7 @@ Yujia Peng, Hannah Lee, Tianmin Shu, and Hongjing Lu
 
 ### Prerequisites
 * Linux Ubuntu 16.04
-* Python 3
+* Python 2 and 3
 * NVIDIA GPU + CUDA 9.0
 
 ### Step 1: Extracting model inputs through OpenCV
