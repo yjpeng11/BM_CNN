@@ -11,7 +11,7 @@ Here are the Python scripts used in the current project.
 * Python 3
 * NVIDIA GPU + CUDA 9.0
 
-### OpenCV
+### Step 1: Extracting model inputs through OpenCV
 
 The OpenCV script extracts static image frames from videos and further generates optical flow images.
 
@@ -19,14 +19,14 @@ The script requires a environment with python 3.5, numpy, and OpenCV-Python.
 
 To run the script, run "python3 opencv_opticalflow.py".
 
-### MATLAB scripts
+### Step 2: Preprocessing model inputs in MATLAB
 
 The script "folder2list_leftright.m" generates a .txt file with a list of videos.
 
 The script "make_test_mat2_leftright.m" takes the .txt file as input to generate a .mat file with directories of the saved static images 
 and optical flow images.
 
-### CNN
+### Step 3: Training and testing CNN models
 
 The CNN scripts implement the spatial CNN of appearance, the temporal CNN of motion, and the two-stream CNN.
 
