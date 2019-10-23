@@ -46,7 +46,17 @@ pip install -r requirements_cnn.txt
 
 The running of CNN scripts requires an environment with python 2.7. Create an environment with all packages from requirements_cnn.txt installed (Note: please double check the CUDA version on your machine).
 
-Run "python CNN_image.py --mode 0" for training the spatial CNN.
-Run "python CNN_flow.py --mode 0" for training the temporal CNN.
-Run "python CNN_fusion.py --mode 0" for training the two-stream CNN.
+To train the spatial CNN:
+```
+python CNN_image.py --mode 0
+```
+To train the temporal CNN:
+```
+python CNN_flow.py --mode 0
+```
+To train the two-stream CNN:
+```
+python CNN_flow.py --mode 0
+```
+
 Change mode 0 to mode 1 for testing.
