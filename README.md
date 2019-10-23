@@ -2,6 +2,15 @@
 
 Here are the Python scripts used in the current project.
 
+## Publication
+
+## Getting started
+
+## Prerequisites
+* Linux Ubuntu 16.04
+* Python 3
+* NVIDIA GPU + CUDA 9.0
+
 ### OpenCV
 
 The OpenCV script extracts static image frames from videos and further generates optical flow images.
@@ -23,7 +32,7 @@ The CNN scripts implement the spatial CNN of appearance, the temporal CNN of mot
 
 First, run "python prepare_flow1.py" to process the list of files in .mat into python format. The name2id and data_path need to be changed accordingly.
 
-The running of CNN scripts requires an environment with python 2.7 and keras.
+The running of CNN scripts requires an environment with python 2.7, tensorflow-gpu 1.9.0, tensorflow-tensorboard 1.5.1, QyPy 1.7.0, and keras 2.2.4, h5py 2.8.0, scipy, skiimage, nnumpy.
 
 Run "python CNN_image.py --mode 0" for training the spatial CNN.
 Run "python CNN_flow.py --mode 0" for training the temporal CNN.
