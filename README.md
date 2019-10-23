@@ -1,8 +1,10 @@
-# A comparison between two-stream convolutional neural networks and human biological motion perception
+# Comparison between Two-stream Convolutional Neural Networks and Human Biological Motion Perception
 
 Here are the Python scripts used in the current project.
 
 ## Publication
+#### Comparison between Two-stream Convolutional Neural Networks and Human Biological Motion Perception
+Yujia Peng, Hannah Lee, Tianmin Shu, and Hongjing Lu
 
 ## Getting started
 
