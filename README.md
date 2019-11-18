@@ -68,7 +68,7 @@ python CNN_flow.py --mode 0
 ```
 To train the two-stream CNN:
 ```
-python CNN_flow.py --mode 0
+python CNN_fusion.py --mode 0
 ```
 
 Change mode 0 to mode 1 for testing.
