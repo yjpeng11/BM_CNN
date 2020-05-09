@@ -67,7 +67,10 @@ To train the temporal CNN:
 python CNN_flow.py --mode 0
 ```
 To train the two-stream CNN:
+First need to extract model features from the spatial and temporal CNN.:
 ```
+python CNN_image.py --mode 1
+python CNN_flow.py --mode 1
 python CNN_fusion.py --mode 0
 ```
 
@@ -76,7 +79,7 @@ Change mode 0 to mode 1 for testing.
 ### Step 4: Transfer training
 First, extract video features fomr the original spatial and temporal CNNs by running:
 ```
-python CNN_flow.py --mode 1
+python CNN_image.py --mode 1
 python CNN_flow.py --mode 1
 ```
 Then, change the # of video classes in CNN_image_freeze.py, CNN_image_freeze.py, and CNN_flow_freeze.py.
