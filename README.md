@@ -72,3 +72,18 @@ python CNN_fusion.py --mode 0
 ```
 
 Change mode 0 to mode 1 for testing.
+
+### Step 4: Transfer training
+
+To perform restricted transfer train on the spatial CNN:
+```
+python CNN_image_freeze.py --mode 0
+```
+To perform restricted transfer train on the temporal CNN:
+```
+python CNN_flow_freeze.py --mode 0
+```
+To perform restricted transfer train on the two-stream CNN:
+```
+python CNN_fusion_freeze.py --mode 0
+```
