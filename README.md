@@ -1,4 +1,4 @@
-# Comparison between Two-stream Convolutional Neural Networks and Human Biological Motion Perception
+# Exploring biological motion perception in two-stream convolutional neural networks
 
 Tensorflow implementation of "Comparison between Two-stream Convolutional Neural Networks and Human Biological Motion Perception"
 
@@ -74,8 +74,17 @@ python CNN_fusion.py --mode 0
 Change mode 0 to mode 1 for testing.
 
 ### Step 4: Transfer training
-
-To perform restricted transfer train on the spatial CNN:
+First, extract video features fomr the original spatial and temporal CNNs by running:
+```
+python CNN_flow.py --mode 1
+python CNN_flow.py --mode 1
+```
+Then, change the # of video classes in CNN_image_freeze.py, CNN_image_freeze.py, and CNN_flow_freeze.py.
+For example, if we now have two categories (e.g. facing left or facing right), change default of num-classes to be 2:
+```
+parser.add_argument('--num-classes', type=int, default=2, help='Number of output labels')
+```
+to perform restricted transfer train on the spatial CNN:
 ```
 python CNN_image_freeze.py --mode 0
 ```
