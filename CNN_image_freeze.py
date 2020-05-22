@@ -55,6 +55,7 @@ def preprocess_image_batch(image_paths, img_size=None, crop_size=None, color_mod
         img[:, :, 0] -= 123.68
         img[:, :, 1] -= 116.779
         img[:, :, 2] -= 103.939
+        # img = img.transpose((2, 0, 1))
 
         if crop_size:
             img = img[(img_size[0] - crop_size[0]) // 2:(img_size[0] + crop_size[0]) // 2
@@ -117,11 +118,12 @@ def build_model(args,
     
     CNN = Model(inputs = CNN_VGG16.input, outputs = CNN_VGG16.get_layer('flatten').output)
     flatten = CNN(X)
-    dense1 = Dense(4096, activation = 'relu', kernel_initializer = my_init, name = 'dense_1')(flatten)
-    dp1 = Dropout(args.dropout_rate, name = 'dp_1')(dense1)
-    dense2 = Dense(4096, activation = 'relu', kernel_initializer = my_init, name = 'dense_2')(dp1)
-    dp2 = Dropout(args.dropout_rate, name = 'dp_2')(dense2)
-    softmax = Dense(args.num_classes, activation = 'softmax', kernel_initializer = my_init, name = 'dense_3')(dp2)
+    dense1 = Dense(4096, trainable=False, activation='relu', kernel_initializer=my_init, name='dense_1')(flatten)
+    dp1 = Dropout(args.dropout_rate, name='dp_1')(dense1)
+    dense2 = Dense(4096, trainable=False, activation='relu', kernel_initializer=my_init, name='dense_2')(dp1)
+    dp2 = Dropout(args.dropout_rate, name='dp_2')(dense2)
+    softmax = Dense(args.num_classes, trainable=False, activation='softmax', kernel_initializer=my_init,
+                    name='new_dense_3')(dp2)
 
     CNN_features = Reshape((7, 7, 512))(flatten)
     if output_feature:
@@ -129,8 +131,12 @@ def build_model(args,
     else:
         model = Model(inputs = X, outputs = softmax)
 
+    for l in model.layers[0:(len(model.layers)-2)]:
+         l.trainable = False
+    model.layers[len(model.layers)-1].trainable = True
+    print model.summary()
     if weights_path:
-        model.load_weights(weights_path, by_name = False)
+        model.load_weights(weights_path, by_name = True)
 
     return model
 
@@ -147,12 +153,16 @@ def compute_confusion_matrix(softmax_output, Y_GT, num_classes):
         ConfusionMat[label, :] /= sum(ConfusionMat[label, :])
     return (score, ConfusionMat)
 
+def load_features(path, args):
+    """load features"""
+    X = np.load(path)
+    return X[::args.reduce_factor]
 
 if __name__ == '__main__':
-    # set model arguments
+    # args
     parser = argparse.ArgumentParser(description='CNN for image')
     parser.add_argument('--seed', type=int, default=123, help='Random seed')
-    parser.add_argument('--num-classes', type=int, default=15, help='Number of output labels')
+    parser.add_argument('--num-classes', type=int, default=2, help='Number of output labels')
     parser.add_argument('--max-nb', type=int, default=5000, help='Maximum number of instances of a class')
     parser.add_argument('--batch-size', type=int, default=16, help='Batch size')
     parser.add_argument('--dropout-rate', type=float, default=0.5, help='Dropout rate')
@@ -166,12 +176,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     WORKSPACE = '/mnt/Data/2/ActionCNN_simulation/two_stream/hmdb51'
-    CHECKPOINT_DIR = WORKSPACE + '/checkpoints_image0/'
-
+    
     # load data
     train_data_path = os.path.join(WORKSPACE, 'flow_train_data.pik')
     train_data = cPickle.load(open(train_data_path))
-    
+
     X_train = train_data['image'][::args.reduce_factor]
     print(len(X_train))
 
@@ -193,6 +202,7 @@ if __name__ == '__main__':
     print "val class counts:", counts
 
     # set up callbacks
+    CHECKPOINT_DIR = WORKSPACE + '/checkpoints_image1/'
     if not os.path.exists(CHECKPOINT_DIR):
       os.makedirs(CHECKPOINT_DIR)
     CHECKPOINT_PATH = CHECKPOINT_DIR + 'weights_dropout{0}.hdf5'.format(args.dropout_rate)
@@ -210,9 +220,6 @@ if __name__ == '__main__':
     sgd = SGD(lr = args.lr, decay = 0.000, momentum = 0.9, nesterov = True)
     steps_train = int(np.ceil(len(Y_train) / float(args.batch_size)))
     steps_val = int(np.ceil(len(Y_val) / float(args.batch_size)))
-    print "train steps:", steps_train
-    print "test steps:", steps_val
-
     if args.mode == 0: # training
         model = build_model(args,CHECKPOINT_PATH)
         print model.summary()
@@ -221,15 +228,15 @@ if __name__ == '__main__':
                       metrics = ['acc'])
 
         model.fit_generator(generator=getBatchGenerator(X_train, Y_train, args),
-                            steps_per_epoch = steps_train, epochs = args.num_epochs,
-                            validation_data = getBatchGenerator(
-                                X_val, Y_val, args, is_shuffle = False),
-                            validation_steps = steps_val,
-                            callbacks = [checkpointer, reduce_lr, early_stopper])
+                            steps_per_epoch=steps_train, epochs=args.num_epochs,
+                            validation_data=getBatchGenerator(
+                                X_val, Y_val, args, is_shuffle=False),
+                            validation_steps=steps_val,
+                            callbacks=[checkpointer, reduce_lr, early_stopper])
 
         model.load_weights(CHECKPOINT_PATH)
         softmax_output = model.predict_generator(generator=getBatchGenerator(
-            X_val, Y_val, args, is_shuffle = False), steps = steps_val, verbose = 1)
+            X_val, Y_val, args, is_shuffle=False), steps=steps_val, verbose=1)
         score, ConfusionMat = compute_confusion_matrix(softmax_output, Y_val, args.num_epochs)
         print 'ConfusionMat:',ConfusionMat
         print 'score:', score
@@ -240,17 +247,20 @@ if __name__ == '__main__':
                       optimizer = sgd,
                       metrics = ['acc'])
         output_val = model.predict_generator(generator=getBatchGenerator(
-            X_val, Y_val, args, is_shuffle = False), steps = steps_val, verbose = 1)
+            X_val, Y_val, args, is_shuffle=False), steps=steps_val, verbose=1)
         print output_val[0].shape
         score, ConfusionMat = compute_confusion_matrix(output_val[0], Y_val, args.num_classes)
+        print 'ConfusionMat:',ConfusionMat
         print 'score:', score
         CNN_features_val = output_val[1]
         np.save(WORKSPACE + '/feature_maps_image_val.npy', CNN_features_val)
-        np.save(WORKSPACE + '/conf_mat_val_test.npy', ConfusionMat)
         CNN_features_test_dense2 = output_val[2]
         np.save(WORKSPACE + '/feature_maps_image_test_dense2.npy', CNN_features_test_dense2)
-
         output_train = model.predict_generator(generator=getBatchGenerator(
-            X_train, Y_train, args, is_shuffle = False), steps = steps_train, verbose = 1)
+            X_train, Y_train, args, is_shuffle = False), steps = steps_train, verbose = 1)        
         CNN_features_train = output_train[1]
         np.save(WORKSPACE + '/feature_maps_image_train.npy', CNN_features_train)
+        
+
+
+

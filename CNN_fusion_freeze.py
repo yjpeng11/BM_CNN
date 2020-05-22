@@ -48,16 +48,21 @@ def build_model(args,
     fusion = Conv2D(512, (7, 7), activation = 'relu', padding = 'same', 
                     kernel_initializer = my_init, name = 'fusion')(concat)
     flatten = Reshape((512 * 7 * 7, ))(fusion)
-    dense1 = Dense(4096, activation = 'relu', kernel_initializer = my_init, name = 'dense_1')(flatten)
+    dense1 = Dense(4096, trainable=False, activation = 'relu', kernel_initializer = my_init, name = 'dense_1')(flatten)
     dp1 = Dropout(args.dropout_rate, name = 'dp_1')(dense1)
-    dense2 = Dense(4096, activation = 'relu', kernel_initializer = my_init, name = 'dense_2')(dp1)
+    dense2 = Dense(4096, trainable=False, activation = 'relu', kernel_initializer = my_init, name = 'dense_2')(dp1)
     dp2 = Dropout(args.dropout_rate, name = 'dp_2')(dense2)
-    softmax = Dense(args.num_classes, activation = 'softmax', kernel_initializer = my_init, name = 'dense_3')(dp2)
+    softmax = Dense(args.num_classes, trainable=True, activation = 'softmax', kernel_initializer = my_init, name = 'new_dense_3')(dp2)
 
     if output_feature:
-        model = Model(inputs = [X_image, X_flow], outputs = [softmax, dense2])
+        model = Model(inputs = [X_image, X_flow], outputs = [softmax, dense2, flatten])
     else:
-        model = Model(inputs = [X_image, X_flow], outputs = softmax)
+        model = Model(inputs = [X_image, X_flow], outputs = [softmax])
+
+    for l in model.layers[0:(len(model.layers)-2)]:
+         l.trainable = False
+    model.layers[len(model.layers)-1].trainable = True
+    print model.summary()
 
     if weights_path:
         model.load_weights(weights_path, by_name = True)
@@ -103,7 +108,7 @@ if __name__ == '__main__':
     # set model arguments
     parser = argparse.ArgumentParser(description='CNN for image')
     parser.add_argument('--seed', type=int, default=123, help='Random seed')
-    parser.add_argument('--num-classes', type=int, default=15, help='Number of output labels')
+    parser.add_argument('--num-classes', type=int, default=2, help='Number of output labels')
     parser.add_argument('--max-nb', type=int, default=5000, help='Maximum number of instances of a class')
     parser.add_argument('--batch-size', type=int, default=16, help='Batch size')
     parser.add_argument('--dropout-rate', type=float, default=0.5, help='Dropout rate')
@@ -113,7 +118,7 @@ if __name__ == '__main__':
     parser.add_argument('--img-cols', type=int, default=224, help='Image width')
     parser.add_argument('--img-chns', type=int, default=20, help='Image channels')
     parser.add_argument('--reduce-factor', type=int, default=1, help='Dataset size reducing factor')
-    parser.add_argument('--mode', type=int, default=1, help='Running mode, 0 - training, 1 - testing')
+    parser.add_argument('--mode', type=int, default=0, help='Running mode, 0 - training, 1 - testing')
     args = parser.parse_args()
 
     WORKSPACE = '/mnt/Data/2/ActionCNN_simulation/two_stream/hmdb51'
@@ -129,19 +134,20 @@ if __name__ == '__main__':
     
     X_image_val_path = os.path.join(WORKSPACE, 'feature_maps_image_val.npy')
     X_image_val = load_features(X_image_val_path, args)
-
+    X_image_val = np.squeeze(X_image_val)  # YP
     X_flow_train_path = os.path.join(WORKSPACE, 'feature_maps_flow_train.npy')
     X_flow_train = load_features(X_flow_train_path, args)
     
     X_flow_val_path = os.path.join(WORKSPACE, 'feature_maps_flow_val.npy')
     X_flow_val = load_features(X_flow_val_path, args)
+    X_flow_val = np.squeeze(X_flow_val)  # YP
 
     # set up callbacks
-    CHECKPOINT_DIR = WORKSPACE + '/checkpoints_fusion0/'
+    CHECKPOINT_DIR = WORKSPACE + '/checkpoints_fusion1/'
     if not os.path.exists(CHECKPOINT_DIR):
       os.makedirs(CHECKPOINT_DIR)
     CHECKPOINT_PATH = CHECKPOINT_DIR + 'weights_dropout{0}.hdf5'.format(args.dropout_rate)
-    print CHECKPOINT_PATH
+
     checkpointer = ModelCheckpoint(filepath = CHECKPOINT_PATH, 
                                    monitor='val_loss', 
                                    verbose = 1,
@@ -155,26 +161,22 @@ if __name__ == '__main__':
     sgd = SGD(lr = args.lr, decay = 0.000, momentum = 0.9, nesterov = True)
     steps_train = int(np.ceil(len(Y_train) / float(args.batch_size)))
     steps_val = int(np.ceil(len(Y_val) / float(args.batch_size)))
-    print "train steps:", steps_train
-    print "test steps:", steps_val
-
     if args.mode == 0: # training
-        model = build_model(args, CHECKPOINT_PATH)
+        model = build_model(args,CHECKPOINT_PATH)
         print model.summary()
         model.compile(loss = 'categorical_crossentropy', 
                       optimizer = sgd,
                       metrics = ['acc'])
-        model.fit([X_image_train, X_flow_train], 
-                  Y_train, 
+        model.fit([X_image_train, X_flow_train],
+                  Y_train,
                   epochs = args.num_epochs, 
                   batch_size = args.batch_size,
                   verbose = 1,
                   validation_data = ([X_image_val, X_flow_val], Y_val),
                   callbacks = [checkpointer, early_stopper, reduce_lr])
-
-        model.load_weights(CHECKPOINT_PATH)
         softmax_output = model.predict([X_image_val, X_flow_val], verbose = 1)
         score, ConfusionMat = compute_confusion_matrix(softmax_output, Y_val, args.num_classes)
+        print ConfusionMat
         print 'score:', score
     if args.mode == 1:
         model = build_model(args, CHECKPOINT_PATH, output_feature = True)
@@ -182,15 +184,10 @@ if __name__ == '__main__':
         model.compile(loss = 'categorical_crossentropy', 
                       optimizer = sgd,
                       metrics = ['acc'])
-        model.load_weights(CHECKPOINT_PATH)
-        output_val = model.predict([X_image_val, X_flow_val], verbose = 1)
-        score, ConfusionMat = compute_confusion_matrix(output_val[0], Y_val, args.num_classes)
-        np.save(WORKSPACE + '/conf_mat_val_fusion.npy', ConfusionMat)
-        np.save(WORKSPACE + '/conf_mat_val_fusion_softmax_Y_val.npy', Y_val)
-        CNN_features_test_dense2 = output_val[1]
+        output_test = model.predict([X_image_val, X_flow_val], verbose = 1)
+        softmax_output = output_test[0]
+        score, ConfusionMat = compute_confusion_matrix(softmax_output, Y_val, args.num_classes)
+        CNN_features_test_dense2 = output_test[1]
         np.save(WORKSPACE + '/feature_maps_fusion_test_dense2.npy', CNN_features_test_dense2)
-        print 'score:', score 
-  
- 
-        
-
+        print 'ConfusionMat:', ConfusionMat
+        print 'score:', score
