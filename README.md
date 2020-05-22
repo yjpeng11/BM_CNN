@@ -43,7 +43,7 @@ and optical flow images.
 
 To process the list of files in .mat into python-friendly format, run:
 ```
-python prepare_flow1.py
+python prepare_list.py
 ```
 The name2id and data_path need to be changed accordingly.
 
@@ -67,7 +67,7 @@ To train the temporal CNN:
 python CNN_flow.py --mode 0
 ```
 To train the two-stream CNN:
-First need to extract model features from the spatial and temporal CNN.:
+First need to extract model features from the spatial and temporal CNN:
 ```
 python CNN_image.py --mode 1
 python CNN_flow.py --mode 1
@@ -82,7 +82,7 @@ First, extract video features fomr the original spatial and temporal CNNs by run
 python CNN_image.py --mode 1
 python CNN_flow.py --mode 1
 ```
-Then, change the # of video classes in CNN_image_freeze.py, CNN_image_freeze.py, and CNN_flow_freeze.py.
+This will generate files containing model features of training and testing stimuli. Then, change the # of video classes in CNN_image_freeze.py, CNN_image_freeze.py, and CNN_flow_freeze.py.
 For example, if we now have two categories (e.g. facing left or facing right), change default of num-classes to be 2:
 ```
 parser.add_argument('--num-classes', type=int, default=2, help='Number of output labels')
@@ -98,4 +98,8 @@ python CNN_flow_freeze.py --mode 0
 To perform restricted transfer train on the two-stream CNN:
 ```
 python CNN_fusion_freeze.py --mode 0
+```
+Change the name of the softmax layer for different restricted transfer training ('new_dense_3' right now), because in the command model.load_weights, option by_name was set to be True so only model weights of layers that share the same names of saved models will be loaded. With a wrong name, the saved model weights of the layer will not be successfully loaded and may introduce random model weights.
+```
+softmax = Dense(args.num_classes, trainable=False, activation='softmax', kernel_initializer=my_init, name='new_dense_3')(dp2)
 ```
