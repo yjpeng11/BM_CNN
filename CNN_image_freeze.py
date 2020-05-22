@@ -122,7 +122,7 @@ def build_model(args,
     dp1 = Dropout(args.dropout_rate, name='dp_1')(dense1)
     dense2 = Dense(4096, trainable=False, activation='relu', kernel_initializer=my_init, name='dense_2')(dp1)
     dp2 = Dropout(args.dropout_rate, name='dp_2')(dense2)
-    softmax = Dense(args.num_classes, trainable=False, activation='softmax', kernel_initializer=my_init,
+    softmax = Dense(args.num_classes, trainable=True, activation='softmax', kernel_initializer=my_init,
                     name='new_dense_3')(dp2)
 
     CNN_features = Reshape((7, 7, 512))(flatten)
